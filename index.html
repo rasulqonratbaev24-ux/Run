@@ -2,189 +2,218 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<title>Animal Race PRO</title>
+<title>Ludo Race PRO</title>
 
 <style>
 body{
   margin:0;
+  background:url("https://i.imgur.com/6Iej2c3.jpg") no-repeat center;
+  background-size:cover;
   font-family:sans-serif;
-  background: linear-gradient(#2c3e50,#1e272e);
   color:white;
   text-align:center;
 }
 
-h1{margin:10px;}
+h1{margin-top:10px;}
 
-#board{
+#game{
   position:relative;
-  width:100%;
-  height:80vh;
+  width:420px;
+  height:650px;
+  margin:auto;
 }
 
+/* YO'L KETEKLAR */
 .cell{
   position:absolute;
-  width:40px;
-  height:40px;
+  width:36px;
+  height:36px;
   border-radius:50%;
-  background:#d2b48c;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:bold;
+  background:#e6c78f;
+  text-align:center;
+  line-height:36px;
+  font-size:11px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.4);
 }
 
-.special{
-  background:#f1c40f;
-}
+/* SPECIAL */
+.ice{background:#5dade2;}
+.bonus{background:#f1c40f;}
+.prize{background:#2ecc71;}
+.trap{background:#2c3e50;}
 
-.freeze{ background:#3498db; }
-.back{ background:#2c3e50; color:white;}
-.prize{ background:#2ecc71; }
-
+/* LUDO CHIP */
 .player{
   position:absolute;
-  font-size:20px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  top:9px;
+  left:9px;
+  border:2px solid white;
 }
 
-#ui{
-  margin:10px;
+/* ranglar */
+.p0{background:red;}
+.p1{background:blue;}
+.p2{background:green;}
+.p3{background:yellow;}
+
+/* CONTROL */
+#controls{
+  position:fixed;
+  bottom:20px;
+  width:100%;
 }
 
 button{
-  padding:10px 20px;
+  padding:12px 25px;
   font-size:18px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   background:#e67e22;
   color:white;
 }
 
+#dice{
+  font-size:30px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🐾 Animal Race PRO</h1>
+<h1>🎲 Ludo Race PRO</h1>
 
-<div id="board"></div>
+<div id="game"></div>
 
-<div id="ui">
+<div id="controls">
   <div id="dice">🎲</div>
   <button onclick="roll()">Taslaw</button>
   <div id="status"></div>
 </div>
 
 <script>
+const game = document.getElementById("game");
+const statusText = document.getElementById("status");
+const dice = document.getElementById("dice");
 
-const board = document.getElementById("board");
 const total = 100;
 
-// 🧠 yo‘lak (egri)
-let path = [];
+/* LUDO */
+const players = ["p0","p1","p2","p3"];
+let pos = [0,0,0,0];
+let turn = 0;
+let skip = [false,false,false,false];
+
+/* YO'L GENERATSIYA (egri) */
+let cells = [];
 
 for(let i=0;i<total;i++){
-  let x = 50 + Math.sin(i/5)*200 + (i*3);
-  let y = 50 + Math.cos(i/4)*150 + (i*2);
+  let angle = i * 0.3;
+  let x = 200 + Math.cos(angle)* (i*2);
+  let y = 50 + i*5;
 
-  path.push({x,y});
+  cells.push({x,y});
 }
 
-// 🎲 kataklar
-for(let i=0;i<total;i++){
-  let c = document.createElement("div");
-  c.className="cell";
-  c.id="c"+i;
-  c.innerText=i+1;
+/* CREATE */
+cells.forEach((c,i)=>{
+  let el = document.createElement("div");
+  el.className="cell";
+  el.style.left=c.x+"px";
+  el.style.top=c.y+"px";
+  el.id="c"+i;
+  el.innerText=i+1;
 
-  c.style.left=path[i].x+"px";
-  c.style.top=path[i].y+"px";
+  game.appendChild(el);
+});
 
-  board.appendChild(c);
+/* SPECIAL RANDOM */
+function rand(n){return Math.floor(Math.random()*n);}
+
+for(let i=0;i<4;i++){
+  document.getElementById("c"+rand(100)).classList.add("ice");
+  document.getElementById("c"+rand(100)).classList.add("bonus");
+  document.getElementById("c"+rand(100)).classList.add("prize");
 }
 
-// 🎯 special kataklar
-let freeze=[10,25,40,70];
-let back=[15,55];
-let bonus=[20,60,80,90];
-let prize=[5,30,50,85];
+for(let i=0;i<2;i++){
+  document.getElementById("c"+rand(100)).classList.add("trap");
+}
 
-freeze.forEach(i=>document.getElementById("c"+i).classList.add("freeze"));
-back.forEach(i=>document.getElementById("c"+i).classList.add("back"));
-bonus.forEach(i=>document.getElementById("c"+i).classList.add("special"));
-prize.forEach(i=>document.getElementById("c"+i).classList.add("prize"));
-
-// 🐾 playerlar
-const players=["🦁","🐯","🐼","🐺"];
-let pos=[0,0,0,0];
-let turn=0;
-let skip=[false,false,false,false];
-
-function draw(){
+/* RENDER */
+function render(){
   document.querySelectorAll(".player").forEach(e=>e.remove());
 
   players.forEach((p,i)=>{
-    let el=document.createElement("div");
-    el.className="player";
-    el.innerText=p;
-
-    el.style.left=(path[pos[i]].x)+"px";
-    el.style.top=(path[pos[i]].y)+"px";
-
-    board.appendChild(el);
+    let cell = document.getElementById("c"+pos[i]);
+    let el = document.createElement("div");
+    el.className="player "+p;
+    cell.appendChild(el);
   });
 }
 
+/* DICE */
 function roll(){
 
   if(skip[turn]){
     skip[turn]=false;
-    alert("Muzlaw ❄️ skip");
+    alert("Skip!");
     next();
     return;
   }
 
-  let r=Math.floor(Math.random()*6)+1;
-  document.getElementById("dice").innerText=r;
+  let r = Math.floor(Math.random()*6)+1;
+  dice.innerText=r;
 
-  pos[turn]+=r;
+  move(r);
+}
 
-  if(pos[turn]>=99){
-    alert(players[turn]+" yutdi!");
-    return;
-  }
+function move(step){
+  if(step==0){after();return;}
+  pos[turn]++;
+  render();
+  setTimeout(()=>move(step-1),200);
+}
 
-  // 🎯 EFFECTS
-  if(freeze.includes(pos[turn])){
+function after(){
+  let p = pos[turn];
+  let cell = document.getElementById("c"+p);
+
+  if(cell.classList.contains("ice")){
     skip[turn]=true;
   }
 
-  if(back.includes(pos[turn])){
-    pos[turn]-=5;
-  }
-
-  if(bonus.includes(pos[turn])){
+  if(cell.classList.contains("bonus")){
     pos[turn]+=3;
   }
 
-  if(prize.includes(pos[turn])){
-    alert("Yana tashlaysan!");
-    draw();
+  if(cell.classList.contains("prize")){
+    roll();
     return;
   }
 
-  draw();
+  if(cell.classList.contains("trap")){
+    pos[turn]-=5;
+    if(pos[turn]<0) pos[turn]=0;
+  }
+
+  if(pos[turn]>=99){
+    statusText.innerText="🏆 G‘OLIB!";
+    return;
+  }
+
   next();
 }
 
 function next(){
   turn=(turn+1)%4;
-  document.getElementById("status").innerText="Nawbet: "+players[turn];
+  statusText.innerText="Nawbet: "+(turn+1);
 }
 
-draw();
+render();
 next();
-
 </script>
 
 </body>
