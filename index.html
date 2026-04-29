@@ -2,77 +2,64 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<title>Animal Race Pro</title>
+<title>Animal Race PRO</title>
 
 <style>
 body{
-  background: linear-gradient(135deg,#1e1e2f,#2c3e50);
+  margin:0;
+  font-family:sans-serif;
+  background: linear-gradient(#2c3e50,#1e272e);
   color:white;
   text-align:center;
-  font-family:sans-serif;
 }
 
-h1{margin-top:10px;}
+h1{margin:10px;}
 
 #board{
-  display:grid;
-  grid-template-columns: repeat(10,60px);
-  gap:6px;
-  justify-content:center;
-  margin:20px;
+  position:relative;
+  width:100%;
+  height:80vh;
 }
 
 .cell{
-  width:60px;
-  height:60px;
-  background:#34495e;
-  border-radius:12px;
-  position:relative;
+  position:absolute;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#d2b48c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:bold;
 }
 
-.cell:nth-child(odd){
-  background:#3d566e;
+.special{
+  background:#f1c40f;
 }
+
+.freeze{ background:#3498db; }
+.back{ background:#2c3e50; color:white;}
+.prize{ background:#2ecc71; }
 
 .player{
   position:absolute;
-  font-size:22px;
-  transition:all 0.25s ease;
+  font-size:20px;
 }
 
-#dice{
-  font-size:50px;
-  margin:20px;
-  transition: all 0.4s ease;
-}
-
-.roll{
-  transform: scale(2) rotate(360deg);
+#ui{
+  margin:10px;
 }
 
 button{
-  padding:12px 25px;
+  padding:10px 20px;
   font-size:18px;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
   background:#e67e22;
   color:white;
-  cursor:pointer;
 }
 
-button:hover{
-  background:#d35400;
-}
-
-#status{
-  font-size:20px;
-  margin-top:10px;
-}
-
-.active{
-  color: #f1c40f;
-  font-weight:bold;
-}
 </style>
 </head>
 
@@ -82,136 +69,123 @@ button:hover{
 
 <div id="board"></div>
 
-<div id="dice">🎲</div>
-<button onclick="rollDice()">Zariq tashla</button>
-
-<div id="status"></div>
+<div id="ui">
+  <div id="dice">🎲</div>
+  <button onclick="roll()">Taslaw</button>
+  <div id="status"></div>
+</div>
 
 <script>
+
 const board = document.getElementById("board");
-const dice = document.getElementById("dice");
-const statusText = document.getElementById("status");
+const total = 100;
 
-const totalCells = 40;
-const players = ["🦁","🐯","🐺","🐼"];
+// 🧠 yo‘lak (egri)
+let path = [];
 
-let positions = [0,0,0,0];
-let currentPlayer = 0;
-let skipTurn = [false,false,false,false];
+for(let i=0;i<total;i++){
+  let x = 50 + Math.sin(i/5)*200 + (i*3);
+  let y = 50 + Math.cos(i/4)*150 + (i*2);
 
-// BOARD (zig-zag)
-let cells = [];
-
-for(let row=0; row<4; row++){
-  let rowCells = [];
-  for(let col=0; col<10; col++){
-    let index = row*10 + col;
-    rowCells.push(index);
-  }
-  if(row % 2 === 1) rowCells.reverse();
-  cells.push(...rowCells);
+  path.push({x,y});
 }
 
-cells.forEach(i=>{
-  let cell = document.createElement("div");
-  cell.classList.add("cell");
-  cell.id = "cell-"+i;
-  board.appendChild(cell);
-});
+// 🎲 kataklar
+for(let i=0;i<total;i++){
+  let c = document.createElement("div");
+  c.className="cell";
+  c.id="c"+i;
+  c.innerText=i+1;
 
-function renderPlayers(){
-  document.querySelectorAll(".player").forEach(p=>p.remove());
+  c.style.left=path[i].x+"px";
+  c.style.top=path[i].y+"px";
+
+  board.appendChild(c);
+}
+
+// 🎯 special kataklar
+let freeze=[10,25,40,70];
+let back=[15,55];
+let bonus=[20,60,80,90];
+let prize=[5,30,50,85];
+
+freeze.forEach(i=>document.getElementById("c"+i).classList.add("freeze"));
+back.forEach(i=>document.getElementById("c"+i).classList.add("back"));
+bonus.forEach(i=>document.getElementById("c"+i).classList.add("special"));
+prize.forEach(i=>document.getElementById("c"+i).classList.add("prize"));
+
+// 🐾 playerlar
+const players=["🦁","🐯","🐼","🐺"];
+let pos=[0,0,0,0];
+let turn=0;
+let skip=[false,false,false,false];
+
+function draw(){
+  document.querySelectorAll(".player").forEach(e=>e.remove());
 
   players.forEach((p,i)=>{
-    let pos = positions[i];
-    let cell = document.getElementById("cell-"+pos);
+    let el=document.createElement("div");
+    el.className="player";
+    el.innerText=p;
 
-    let el = document.createElement("div");
-    el.classList.add("player");
-    el.innerText = p;
+    el.style.left=(path[pos[i]].x)+"px";
+    el.style.top=(path[pos[i]].y)+"px";
 
-    el.style.top = (i*14)+"px";
-
-    cell.appendChild(el);
+    board.appendChild(el);
   });
 }
 
-function rollDice(){
+function roll(){
 
-  if(skipTurn[currentPlayer]){
-    skipTurn[currentPlayer] = false;
-    alert(players[currentPlayer] + " skip qildi ❄️");
-    nextPlayer();
+  if(skip[turn]){
+    skip[turn]=false;
+    alert("Muzlaw ❄️ skip");
+    next();
     return;
   }
 
-  let roll = Math.floor(Math.random()*6)+1;
+  let r=Math.floor(Math.random()*6)+1;
+  document.getElementById("dice").innerText=r;
 
-  dice.classList.add("roll");
-  dice.innerText = roll;
+  pos[turn]+=r;
 
-  setTimeout(()=>{
-    dice.classList.remove("roll");
-    movePlayer(roll);
-  },500);
-}
-
-function movePlayer(roll){
-  let steps = roll;
-
-  function step(){
-    if(steps === 0){
-      afterMove();
-      return;
-    }
-
-    positions[currentPlayer]++;
-    renderPlayers();
-    steps--;
-
-    setTimeout(step, 250);
-  }
-
-  step();
-}
-
-function afterMove(){
-
-  let pos = positions[currentPlayer];
-
-  // BONUS
-  if(pos % 7 === 0){
-    positions[currentPlayer] += 2;
-    alert("⭐ Bonus +2");
-  }
-
-  // SKIP
-  if(pos % 5 === 0){
-    skipTurn[currentPlayer] = true;
-    alert("❄️ Keyingi navbat skip");
-  }
-
-  renderPlayers();
-
-  // WIN
-  if(positions[currentPlayer] >= totalCells-1){
-    statusText.innerHTML = players[currentPlayer] + " G‘OLIB! 🏆";
+  if(pos[turn]>=99){
+    alert(players[turn]+" yutdi!");
     return;
   }
 
-  nextPlayer();
+  // 🎯 EFFECTS
+  if(freeze.includes(pos[turn])){
+    skip[turn]=true;
+  }
+
+  if(back.includes(pos[turn])){
+    pos[turn]-=5;
+  }
+
+  if(bonus.includes(pos[turn])){
+    pos[turn]+=3;
+  }
+
+  if(prize.includes(pos[turn])){
+    alert("Yana tashlaysan!");
+    draw();
+    return;
+  }
+
+  draw();
+  next();
 }
 
-function nextPlayer(){
-  currentPlayer = (currentPlayer + 1) % 4;
-  statusText.innerHTML = "Navbat: <span class='active'>" + players[currentPlayer] + "</span>";
+function next(){
+  turn=(turn+1)%4;
+  document.getElementById("status").innerText="Nawbet: "+players[turn];
 }
 
-renderPlayers();
-nextPlayer();
+draw();
+next();
 
 </script>
 
 </body>
 </html>
-<h1>ISHLADI</h1>
