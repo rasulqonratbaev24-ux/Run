@@ -1,220 +1,302 @@
-<!DOCTYPE html>
-<html lang="uz">
+<!doctype html>
+<html lang="kaa">
 <head>
-<meta charset="UTF-8">
-<title>Ludo Race PRO</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tez Basıw</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;700;800&display=swap">
 <style>
-body{
-  margin:0;
-  background:url("https://i.imgur.com/6Iej2c3.jpg") no-repeat center;
-  background-size:cover;
-  font-family:sans-serif;
-  color:white;
-  text-align:center;
+html{color-scheme:dark}body{margin:0}[hidden]{display:none!important}
+/* Layout: one phone screen. Status bar on top, one huge buzzer in the middle, live finishing order at the bottom. */
+:root{
+  --bg:#0a1230; --bg2:#13204f; --panel:#101a40; --line:#2b3d82; --ink:#eef3ff; --mute:#93a6dd;
+  --gold:#f4b21b; --green:#2ec27e; --red:#e0261f;
+  --t1:#ff5a5f; --t2:#3da9fc; --t3:#2ec27e; --t4:#f5b82e;
+  --f-display:'Anton','Impact','Arial Narrow',sans-serif;
+  --f-body:'Manrope','Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
 }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{background:radial-gradient(900px 500px at 50% -10%,var(--bg2),var(--bg) 70%) var(--bg);color:var(--ink);font-family:var(--f-body);
+  padding-block:14px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px;min-height:calc(100vh - 40px)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-family:var(--f-display);font-weight:400;font-size:28px;letter-spacing:.05em;margin:0;color:var(--gold)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--red);display:inline-block}
+.chip.on i{background:var(--green)}
+.who{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:800}
+.who button{padding:6px 12px;font-size:13px}
+.hostchip{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--gold);cursor:pointer;white-space:nowrap}
+.hostchip input{width:22px;height:22px;accent-color:var(--gold)}
+.badge{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:var(--f-display);font-size:18px;color:#101010;margin-right:8px}
+.b1{background:var(--t1)}.b2{background:var(--t2)}.b3{background:var(--t3)}.b4{background:var(--t4)}.b0{background:var(--mute)}
 
-h1{margin-top:10px;}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.roles button.team{height:110px;font-family:var(--f-display);font-weight:400;font-size:44px;color:#101010;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.roles button.team small{font:800 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase}
+.t1{background:var(--t1)}.t2{background:var(--t2)}.t3{background:var(--t3)}.t4{background:var(--t4)}
+.hostpick{display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:800}
+.hostpick input{width:22px;height:22px;accent-color:var(--gold)}
+.hostpick input[type=text]{width:auto;flex:1;min-width:0;height:44px;background:#0a1230;border:2px solid var(--line);border-radius:8px;color:var(--ink);font:800 20px var(--f-body);padding:0 12px;letter-spacing:.1em}
+.hostpick input[type=text]:focus-visible{outline:3px solid #5aa2ff;outline-offset:2px}
+h2{margin:0;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
 
-#game{
-  position:relative;
-  width:420px;
-  height:650px;
-  margin:auto;
-}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:300px}
+.buzz{width:min(78vw,340px);aspect-ratio:1;border-radius:50%;border:10px solid #ffffff22;color:#101010;font-family:var(--f-display);font-weight:400;font-size:clamp(44px,14vw,76px);letter-spacing:.04em;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;line-height:1.05;padding:16px;transition:transform .08s,filter .2s;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.buzz small{font:800 14px var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.buzz:active:not([aria-disabled="true"]){transform:scale(.96)}
+.buzz.wait{background:#1b2755;color:var(--mute);border-color:var(--line);font-size:clamp(26px,8vw,40px)}
+.buzz.live{background:var(--gold);box-shadow:0 0 0 0 rgba(244,178,27,.6),0 0 50px rgba(244,178,27,.45);animation:pulse 1.2s infinite}
+.buzz.sent{background:#d7e3ff;font-size:clamp(30px,9vw,48px)}
+.buzz.rank{font-size:clamp(70px,22vw,130px)}
+.buzz.late{background:#2a1530;color:#ff9aa0;border-color:#5a2a40;font-size:clamp(26px,8vw,40px)}
+.buzz.shake{animation:shake .35s}
+@keyframes pulse{70%{box-shadow:0 0 0 26px rgba(244,178,27,0),0 0 50px rgba(244,178,27,.45)}100%{box-shadow:0 0 0 0 rgba(244,178,27,0),0 0 50px rgba(244,178,27,.45)}}
+@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.hint{color:var(--mute);font-size:13px;text-align:center;min-height:20px;font-weight:700}
 
-/* YO'L KETEKLAR */
-.cell{
-  position:absolute;
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:#e6c78f;
-  text-align:center;
-  line-height:36px;
-  font-size:11px;
-  box-shadow:0 2px 4px rgba(0,0,0,0.4);
-}
-
-/* SPECIAL */
-.ice{background:#5dade2;}
-.bonus{background:#f1c40f;}
-.prize{background:#2ecc71;}
-.trap{background:#2c3e50;}
-
-/* LUDO CHIP */
-.player{
-  position:absolute;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  top:9px;
-  left:9px;
-  border:2px solid white;
-}
-
-/* ranglar */
-.p0{background:red;}
-.p1{background:blue;}
-.p2{background:green;}
-.p3{background:yellow;}
-
-/* CONTROL */
-#controls{
-  position:fixed;
-  bottom:20px;
-  width:100%;
-}
-
-button{
-  padding:12px 25px;
-  font-size:18px;
-  border:none;
-  border-radius:10px;
-  background:#e67e22;
-  color:white;
-}
-
-#dice{
-  font-size:30px;
-}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.order li{display:flex;align-items:center;gap:10px;background:#0a1230;border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:800;min-height:48px}
+.order li .pos{font-family:var(--f-display);font-size:24px;width:30px;color:var(--gold)}
+.order li .gap{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--mute);font-size:14px}
+.order li.empty{color:#586aa8;border-style:dashed}
+.order li.me{border-color:var(--gold)}
+.roster{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.roster b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-family:var(--f-display);font-weight:400;font-size:14px;color:#101010;opacity:.25}
+.roster b.on{opacity:1}
+.hostbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hostbar .wide{grid-column:1/-1}
+button{font:800 14px var(--f-body);border:0;border-radius:8px;padding:12px 16px;cursor:pointer;color:#fff;background:#1d4ed8}
+button.gold{background:var(--gold);color:#2a1700}
+button.red{background:var(--red)}
+button.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,.buzz:focus-visible{outline:3px solid #5aa2ff;outline-offset:3px}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+@media(prefers-reduced-motion:reduce){.buzz.live,.buzz.shake{animation:none}}
 </style>
 </head>
-
 <body>
 
-<h1>🎲 Ludo Race PRO</h1>
 
-<div id="game"></div>
+<div class="app">
+  <div class="top"><h1>TEZ BASIW</h1><span class="chip" id="conn"><i></i><span id="connTxt">Baylanıs...</span></span></div>
 
-<div id="controls">
-  <div id="dice">🎲</div>
-  <button onclick="roll()">Taslaw</button>
-  <div id="status"></div>
+  <section id="roleScreen" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <h2>Bólme kodı</h2>
+      <label class="hostpick"><span>Kod</span><input type="text" id="code" maxlength="16" autocomplete="off" autocapitalize="none" placeholder="mısalı: 1234" aria-label="Bólme kodı"></label>
+      <div class="note" id="codeErr" style="color:#ff9aa0"></div>
+      <h2>Komandańızdı saylań</h2>
+      <div class="roles">
+        <button class="team t1" data-team="1" type="button">1<small>komanda</small></button>
+        <button class="team t2" data-team="2" type="button">2<small>komanda</small></button>
+        <button class="team t3" data-team="3" type="button">3<small>komanda</small></button>
+        <button class="team t4" data-team="4" type="button">4<small>komanda</small></button>
+      </div>
+      <button class="ghost" data-team="0" type="button">Tek ǵana kóriw</button>
+      <label class="hostpick"><input type="checkbox" id="hostChk"> Men sorawdı oqıwshı (boshqarıwshı)</label>
+      <div class="note">Hámme telefonlarda birdey kod jazıladı. Hár bir telefon ózine ózgeshe komanda saylaydı. Tek bir telefonda «boshqarıwshı» belgisin qoyıń: ol telefon basıwdı ashadı hám nátiyjeni esaplaydı.</div>
+    </div>
+  </section>
+
+  <section id="game" hidden style="display:flex;flex-direction:column;gap:14px;flex:1">
+    <div class="who"><span><span class="badge" id="myBadge">0</span><span id="myLabel"></span></span><label class="hostchip"><input type="checkbox" id="hostChk2"> Boshqarıwshı</label></div>
+    <div class="stage">
+      <button class="buzz wait" id="buzz" type="button" aria-live="polite"></button>
+      <div class="hint" id="hint"></div>
+    </div>
+    <div class="panel">
+      <h2>Nátiyje</h2>
+      <ol class="order" id="order"></ol>
+      <div class="roster" id="roster"></div>
+    </div>
+    <div class="panel" id="hostPanel" hidden>
+      <h2>Boshqarıw</h2>
+      <div class="hostbar">
+        <button class="gold wide" id="open" type="button">Soraw oqıldı. Basıwdı ashıw</button>
+        <button class="red" id="close" type="button">Jabıw</button>
+        <button class="ghost" id="clear" type="button">Tazalaw</button>
+      </div>
+      <div class="note">Basıw tártibi boshqarıwshı telefonǵa jetken waqıt boyınsha anıqlanadı. Ayırma milisekundlarda kórsetiledi.</div>
+    </div>
+  </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script>
-const game = document.getElementById("game");
-const statusText = document.getElementById("status");
-const dice = document.getElementById("dice");
+const $=id=>document.getElementById(id);
+const LS='tezbasiw-gh-v1';
+const URLS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+let me={team:null,host:false,code:''};
+let st={seq:0,round:0,phase:'idle',order:[]};
+let client=null,online=false,peers={},pending=false,pendT=0,openPerf=0,audio=null,urlIx=0,fails=0,everUp=false;
+const CID='p'+Math.random().toString(36).slice(2,10);
+try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&typeof d.team==='number'||d&&d.team===null)me=Object.assign(me,d)}catch(e){}
+function saveRole(){try{localStorage.setItem(LS,JSON.stringify(me))}catch(e){}}
+const cleanCode=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,16);
+const base=()=>'tezbasiw-'+cleanCode(me.code)+'/';
 
-const total = 100;
+function ac(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch(e){return null}}
+function tone(f,d,type,v,at){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=v||.18;o.connect(g);g.connect(a.destination);const s=a.currentTime+(at||0);o.start(s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.stop(s+d)}
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+const rankOf=t=>st.order.findIndex(o=>o.t===t);
 
-/* LUDO */
-const players = ["p0","p1","p2","p3"];
-let pos = [0,0,0,0];
-let turn = 0;
-let skip = [false,false,false,false];
-
-/* YO'L GENERATSIYA (egri) */
-let cells = [];
-
-for(let i=0;i<total;i++){
-  let angle = i * 0.3;
-  let x = 200 + Math.cos(angle)* (i*2);
-  let y = 50 + i*5;
-
-  cells.push({x,y});
-}
-
-/* CREATE */
-cells.forEach((c,i)=>{
-  let el = document.createElement("div");
-  el.className="cell";
-  el.style.left=c.x+"px";
-  el.style.top=c.y+"px";
-  el.id="c"+i;
-  el.innerText=i+1;
-
-  game.appendChild(el);
-});
-
-/* SPECIAL RANDOM */
-function rand(n){return Math.floor(Math.random()*n);}
-
-for(let i=0;i<4;i++){
-  document.getElementById("c"+rand(100)).classList.add("ice");
-  document.getElementById("c"+rand(100)).classList.add("bonus");
-  document.getElementById("c"+rand(100)).classList.add("prize");
-}
-
-for(let i=0;i<2;i++){
-  document.getElementById("c"+rand(100)).classList.add("trap");
-}
-
-/* RENDER */
+/* ---------- rendering ---------- */
 function render(){
-  document.querySelectorAll(".player").forEach(e=>e.remove());
+  const chosen=me.team!==null&&me.code;
+  $('roleScreen').hidden=!!chosen;$('game').hidden=!chosen;
+  if(!chosen)return;
+  const t=me.team;
+  $('myBadge').className='badge b'+t;$('myBadge').textContent=t||'·';
+  $('myLabel').textContent=(t?t+'-komanda':'Kóriwshi')+(me.host?' · boshqarıwshı':'')+' · kod: '+cleanCode(me.code);
+  $('hostPanel').hidden=!me.host;$('hostChk2').checked=!!me.host;
+  $('close').disabled=st.phase!=='open';
 
-  players.forEach((p,i)=>{
-    let cell = document.getElementById("c"+pos[i]);
-    let el = document.createElement("div");
-    el.className="player "+p;
-    cell.appendChild(el);
+  const b=$('buzz');const r=t?rankOf(t):-1;
+  let cls,html,hint='';
+  if(!t){cls='buzz wait';html='Kóriw rejimi';hint='Nátiyje tómende kórinedi.'}
+  else if(r>=0){cls='buzz rank';html=`${r+1}<small>-orın</small>`;hint=r===0?'Siz birinshi basıwdı!':'Nátiyje tómende.'}
+  else if(st.phase==='open'&&pending){cls='buzz sent';html='Jiberildi...';hint='Nátiyje kútilip atır'}
+  else if(st.phase==='open'){cls='buzz live';html='BAS!';hint='Tez basıń!'}
+  else if(st.phase==='done'){cls='buzz late';html='Úlgermediń';hint='Jańa sorawdı kútiń'}
+  else{cls='buzz wait';html='Sorawdı<br>kútiń';hint=me.host?'Soraw oqılıp bolǵannan keyin tómendegi «Basıwdı ashıw» túymesin basıń.':'Boshqarıwshı basıwdı ashqansha kútiń.'}
+  b.className=cls+(b.classList.contains('shake')?' shake':'');b.innerHTML=html;
+  b.setAttribute('aria-disabled',String(!(t&&st.phase==='open'&&r<0&&!pending&&online)));
+  $('hint').textContent=online?hint:'Baylanıs joq. Internetti tekseriń.';
+
+  const ol=$('order');ol.innerHTML='';
+  for(let i=0;i<4;i++){
+    const o=st.order[i];const li=document.createElement('li');
+    if(!o){li.className='empty';li.innerHTML=`<span class="pos">${i+1}</span><span>${st.phase==='open'?'kútilip atır...':'—'}</span>`}
+    else{li.className=o.t===me.team?'me':'';
+      const gap=i===0?'birinshi':'+'+Math.max(0,o.ms-st.order[0].ms)+' ms';
+      li.innerHTML=`<span class="pos">${i+1}</span><span class="badge b${o.t}" style="margin:0">${o.t}</span><span>${o.t}-komanda</span><span class="gap">${gap}</span>`}
+    ol.appendChild(li);
+  }
+  paintRoster();
+}
+function paintRoster(){
+  const have=new Set(Object.values(peers));
+  $('roster').innerHTML='Onlayn: '+[1,2,3,4].map(i=>`<b class="b${i}${have.has(i)?' on':''}">${i}</b>`).join('');
+}
+function setConn(on){online=on;$('conn').classList.toggle('on',on);$('connTxt').textContent=on?'Onlayn':'Baylanıs joq';render()}
+
+/* ---------- network (public MQTT broker over WebSocket) ---------- */
+function send(sub,obj,retain){
+  if(!client||!online)return;
+  try{client.publish(base()+sub,obj===null?'':JSON.stringify(obj),{qos:1,retain:!!retain})}catch(e){}
+}
+function sendPresence(){
+  if(!client||!online)return;
+  try{client.publish(base()+'presence/'+CID,me.team?JSON.stringify({team:me.team}):'',{qos:0,retain:true})}catch(e){}
+}
+function connect(){
+  if(client){try{client.end(true)}catch(e){}client=null}
+  peers={};setConn(false);
+  if(!cleanCode(me.code))return;
+  if(typeof mqtt==='undefined'){$('hint').textContent='Kitapxana júklenbedi. Internetti tekseriń.';return}
+  const b=base();
+  const c=mqtt.connect(URLS[urlIx%URLS.length],{clientId:CID+'-'+Math.floor(Math.random()*1e4),clean:true,reconnectPeriod:2000,connectTimeout:8000,
+    will:{topic:b+'presence/'+CID,payload:'',retain:true,qos:0}});
+  client=c;
+  c.on('connect',()=>{
+    everUp=true;fails=0;
+    c.subscribe([b+'state',b+'buzz',b+'presence/+'],{qos:1});
+    setConn(true);sendPresence();
+  });
+  c.on('close',()=>{
+    if(client!==c)return;
+    setConn(false);
+    if(!everUp&&++fails>=2){fails=0;urlIx++;connect()}
+  });
+  c.on('error',()=>{});
+  c.on('message',(topic,payload,pkt)=>{
+    if(client!==c)return;
+    const sub=topic.slice(b.length);let txt='';
+    try{txt=new TextDecoder().decode(payload)}catch(e){}
+    if(sub==='state'){
+      try{const n=JSON.parse(txt);
+        if(pkt&&pkt.retain&&n.phase==='open'&&Date.now()-n.seq>10*60*1000)n.phase='idle';
+        apply(n)}catch(e){}
+    }else if(sub==='buzz'){
+      try{onBuzz(JSON.parse(txt))}catch(e){}
+    }else if(sub.startsWith('presence/')){
+      const id=sub.slice(9);
+      if(!txt)delete peers[id];else{try{peers[id]=JSON.parse(txt).team|0}catch(e){}}
+      paintRoster();
+    }
   });
 }
 
-/* DICE */
-function roll(){
-
-  if(skip[turn]){
-    skip[turn]=false;
-    alert("Skip!");
-    next();
-    return;
+/* ---------- shared state ---------- */
+function apply(n){
+  if(!n||typeof n.seq!=='number'||n.seq<=st.seq)return;
+  const before=st;
+  st={seq:n.seq,round:n.round|0,phase:String(n.phase),order:Array.isArray(n.order)?n.order.slice(0,4).map(o=>({t:o.t|0,ms:o.ms|0})):[]};
+  if(st.round!==before.round||st.phase!=='open'){pending=false;clearTimeout(pendT)}
+  if(me.team){
+    const r0=before.round===st.round?before.order.findIndex(o=>o.t===me.team):-1,r1=rankOf(me.team);
+    if(r1>=0&&r0<0){pending=false;tone([1046,880,740,620][r1],.5,'triangle',.2);vib(r1===0?[60,40,60]:40)}
+    else if(st.phase==='open'&&before.phase!=='open'){tone(660,.18,'sine',.12);vib(30)}
   }
-
-  let r = Math.floor(Math.random()*6)+1;
-  dice.innerText=r;
-
-  move(r);
-}
-
-function move(step){
-  if(step==0){after();return;}
-  pos[turn]++;
   render();
-  setTimeout(()=>move(step-1),200);
+}
+function publish(){
+  st={...st,seq:Math.max(Date.now(),st.seq+1)};
+  send('state',st,true);render();
 }
 
-function after(){
-  let p = pos[turn];
-  let cell = document.getElementById("c"+p);
-
-  if(cell.classList.contains("ice")){
-    skip[turn]=true;
-  }
-
-  if(cell.classList.contains("bonus")){
-    pos[turn]+=3;
-  }
-
-  if(cell.classList.contains("prize")){
-    roll();
-    return;
-  }
-
-  if(cell.classList.contains("trap")){
-    pos[turn]-=5;
-    if(pos[turn]<0) pos[turn]=0;
-  }
-
-  if(pos[turn]>=99){
-    statusText.innerText="🏆 G‘OLIB!";
-    return;
-  }
-
-  next();
+/* ---------- host ---------- */
+function hostOpen(){st={...st,round:st.round+1,phase:'open',order:[]};openPerf=performance.now();pending=false;publish();tone(660,.18)}
+function hostClose(){if(st.phase==='open'){st={...st,phase:'done'};publish()}}
+function hostClear(){st={...st,round:st.round+1,phase:'idle',order:[]};pending=false;publish()}
+function onBuzz(d){
+  if(!me.host||!d)return;
+  const t=d.t|0;
+  if(t<1||t>4||st.phase!=='open'||d.r!==st.round||st.order.some(o=>o.t===t))return;
+  st={...st,order:[...st.order,{t,ms:Math.round(performance.now()-openPerf)}]};
+  if(st.order.length>=4)st.phase='done';
+  publish();
 }
 
-function next(){
-  turn=(turn+1)%4;
-  statusText.innerText="Nawbet: "+(turn+1);
+/* ---------- player ---------- */
+function press(){
+  if(!me.team)return;
+  const b=$('buzz');
+  if(st.phase!=='open'){b.classList.add('shake');vib(120);setTimeout(()=>b.classList.remove('shake'),400);$('hint').textContent='Erte! Soraw áli oqılıp bolmadı.';return}
+  if(rankOf(me.team)>=0||pending||!online)return;
+  pending=true;clearTimeout(pendT);
+  pendT=setTimeout(()=>{if(rankOf(me.team)<0){pending=false;render()}},1800);
+  tone(520,.08,'square',.1);vib(25);
+  send('buzz',{t:me.team,r:st.round},false);
+  render();
+}
+function setRole(team){
+  const code=cleanCode($('code').value);
+  if(!code){$('codeErr').textContent='Aldın bólme kodın jazıń (mısalı: 1234).';$('code').focus();return}
+  $('codeErr').textContent='';ac();
+  const changed=cleanCode(me.code)!==code||!client;
+  me.team=team;me.code=code;me.host=$('hostChk').checked;saveRole();pending=false;
+  if(changed)connect();else sendPresence();
+  render();
 }
 
-render();
-next();
+/* ---------- wiring ---------- */
+document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>setRole(+b.dataset.team));
+$('hostChk2').onchange=e=>{me.host=e.target.checked;saveRole();render()};
+$('buzz').onclick=press;
+$('open').onclick=hostOpen;$('close').onclick=hostClose;$('clear').onclick=hostClear;
+$('code').value=me.code||'';$('hostChk').checked=!!me.host;
+render();setConn(false);
+if(me.team!==null&&cleanCode(me.code))connect();
+
 </script>
 
 </body>
 </html>
+
